@@ -1,0 +1,23 @@
+CREATE TABLE projects (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL,
+    entry_state TEXT DEFAULT 'scratch',
+    project_type TEXT DEFAULT 'R01',
+    target_agency TEXT DEFAULT 'NIH',
+    target_mechanism TEXT,
+    target_institute TEXT,
+    target_foa TEXT,
+    title TEXT,
+    concept JSONB DEFAULT '{}'::jsonb,
+    hypothesis JSONB DEFAULT '{}'::jsonb,
+    specific_aims JSONB DEFAULT '{}'::jsonb,
+    team JSONB DEFAULT '{}'::jsonb,
+    approach JSONB DEFAULT '{}'::jsonb,
+    budget JSONB DEFAULT '{}'::jsonb,
+    preliminary_data JSONB DEFAULT '{}'::jsonb,
+    summary_figure JSONB DEFAULT '{}'::jsonb,
+    review_simulation JSONB DEFAULT '{}'::jsonb,
+    status TEXT DEFAULT 'draft',
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
