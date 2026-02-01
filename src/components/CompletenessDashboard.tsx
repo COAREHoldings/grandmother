@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { CheckCircle, XCircle, AlertCircle, FileText, Users, DollarSign, Building, FlaskConical, BarChart3 } from 'lucide-react';
+import { CheckCircle, XCircle, AlertCircle, FileText, Users, DollarSign, FlaskConical, BarChart3 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
 interface Section {
@@ -32,18 +32,14 @@ interface Props {
 const WORDS_PER_PAGE = 300;
 
 const DEFAULT_SECTIONS = [
-  { id: 'title', name: 'Title', icon: FileText, required: true },
-  { id: 'abstract', name: 'Abstract', icon: FileText, required: true },
-  { id: 'specific_aims', name: 'Specific Aims', icon: FlaskConical, required: true },
-  { id: 'significance', name: 'Significance', icon: BarChart3, required: true },
-  { id: 'innovation', name: 'Innovation', icon: BarChart3, required: true },
-  { id: 'approach', name: 'Research Strategy/Approach', icon: FlaskConical, required: true },
-  { id: 'statistical_plan', name: 'Statistical Plan', icon: BarChart3, required: false },
-  { id: 'team', name: 'Biosketches', icon: Users, required: true },
-  { id: 'letters_support', name: 'Letters of Support', icon: FileText, required: false },
-  { id: 'budget', name: 'Budget & Justification', icon: DollarSign, required: true },
-  { id: 'facilities', name: 'Facilities & Equipment', icon: Building, required: true },
-  { id: 'preliminary_data', name: 'Preliminary Data', icon: BarChart3, required: false },
+  { id: 'concept', name: '1. Research Concept', icon: FileText, required: true },
+  { id: 'hypothesis', name: '2. Central Hypothesis', icon: FlaskConical, required: true },
+  { id: 'specific_aims', name: '3. Specific Aims', icon: FlaskConical, required: true },
+  { id: 'team', name: '4. Key Personnel', icon: Users, required: true },
+  { id: 'approach', name: '5. Research Approach', icon: BarChart3, required: true },
+  { id: 'budget', name: '6. Budget', icon: DollarSign, required: true },
+  { id: 'preliminary_data', name: '7. Preliminary Data', icon: BarChart3, required: false },
+  { id: 'summary_figure', name: '8. Summary Figure', icon: FileText, required: false },
 ];
 
 export default function CompletenessDashboard({ projectId, projectData, fundingProgram, onValidationComplete }: Props) {
@@ -139,7 +135,7 @@ export default function CompletenessDashboard({ projectId, projectData, fundingP
   return (
     <div className="bg-white rounded-xl border border-slate-200 p-6">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-slate-900">Completeness Dashboard</h3>
+        <h3 className="text-lg font-semibold text-slate-900">Eight Module Framework</h3>
         <div className="flex items-center gap-3">
           <div className="w-32 h-3 bg-slate-200 rounded-full overflow-hidden">
             <div 

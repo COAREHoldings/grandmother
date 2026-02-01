@@ -47,8 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function signUp(email: string, password: string, name?: string) {
-    // Standard signup
-    const { error: signUpError } = await supabase.auth.signUp({
+    const { data, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
       options: { data: { name } }
@@ -58,13 +57,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error: signUpError as Error };
     }
 
-    // Immediately sign in after signup
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    });
+    // If session exists, user is auto-confirmed (email confirmation disabled)
+    if (data.session) {
+      setSession(data.session);
+      setUser(data.user);
+    }
 
-    return { error: signInError as Error | null };
+    return { error: null };
   }
 
   async function signOut() {

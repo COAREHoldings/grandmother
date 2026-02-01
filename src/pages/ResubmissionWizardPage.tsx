@@ -55,7 +55,7 @@ export default function ResubmissionWizardPage() {
 
   const fetchProject = async () => {
     const { data, error } = await supabase
-      .from('projects')
+      .from('gf_projects')
       .select('*')
       .eq('id', id)
       .maybeSingle();

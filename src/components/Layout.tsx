@@ -44,9 +44,9 @@ export default function Layout({ children }: LayoutProps) {
           <div className="flex justify-between items-center h-16">
             <Link to={user ? '/dashboard' : '/'} className="flex items-center gap-2">
               <div className="w-8 h-8 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">GF</span>
+                <span className="text-white font-bold text-sm">GM</span>
               </div>
-              <span className="text-xl font-bold text-slate-900">GRANTFATHER</span>
+              <span className="text-xl font-bold text-slate-900">GrantMother</span>
             </Link>
 
             {user && (

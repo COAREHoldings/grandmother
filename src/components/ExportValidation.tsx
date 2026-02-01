@@ -118,7 +118,7 @@ export default function ExportValidation({ projectId, projectData, isValid, issu
       // Footer on last page
       doc.setFontSize(8);
       doc.setTextColor(150, 150, 150);
-      doc.text(`GRANTFATHER - Project ID: ${projectId}`, margin, pageHeight - 10);
+      doc.text(`GrantMother - Project ID: ${projectId}`, margin, pageHeight - 10);
 
       // Save
       const filename = `${(projectData?.title || 'grant').replace(/[^a-z0-9]/gi, '_').substring(0, 30)}_${isDraft ? 'DRAFT_' : ''}${new Date().toISOString().split('T')[0]}.pdf`;

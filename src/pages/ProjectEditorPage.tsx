@@ -6,6 +6,9 @@ import ModuleDashboard from '@/components/ModuleDashboard';
 import CompletenessDashboard from '@/components/CompletenessDashboard';
 import ExportValidation from '@/components/ExportValidation';
 import VersionHistory from '@/components/VersionHistory';
+import GuidedQuestionnaire from '@/components/GuidedQuestionnaire';
+import CompileGrant from '@/components/CompileGrant';
+import AISuggestion from '@/components/AISuggestion';
 import { 
   Lightbulb, 
   Target, 
@@ -23,21 +26,23 @@ import {
   AlertCircle,
   RefreshCw,
   BookOpen,
-  BarChart3
+  BarChart3,
+  FileOutput
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const modules = [
   { id: 'analysis', label: 'Analysis', icon: BarChart3, description: 'Document upload & scoring' },
+  { id: 'compile', label: 'Compile Grant', icon: FileOutput, description: 'Generate formatted grant document' },
   { id: 'history', label: 'History', icon: RefreshCw, description: 'Version history & comparisons' },
-  { id: 'concept', label: 'Concept', icon: Lightbulb, description: 'Research concept and significance' },
-  { id: 'hypothesis', label: 'Hypothesis', icon: Target, description: 'Central hypothesis development' },
-  { id: 'specific_aims', label: 'Specific Aims', icon: FlaskConical, description: 'Aims and objectives' },
-  { id: 'team', label: 'Team', icon: Users, description: 'Key personnel and expertise' },
-  { id: 'approach', label: 'Approach', icon: Route, description: 'Research strategy and methods' },
-  { id: 'budget', label: 'Budget Director', icon: DollarSign, description: 'Multi-year budget planning' },
-  { id: 'preliminary_data', label: 'Preliminary Data', icon: Database, description: 'Supporting data' },
-  { id: 'summary_figure', label: 'Summary Figure', icon: Image, description: 'Visual summary' },
+  { id: 'concept', label: '1. Concept', icon: Lightbulb, description: 'Research concept and significance', hasQuestionnaire: true },
+  { id: 'hypothesis', label: '2. Hypothesis', icon: Target, description: 'Central hypothesis development', hasQuestionnaire: true },
+  { id: 'specific_aims', label: '3. Specific Aims', icon: FlaskConical, description: 'Aims and objectives', hasQuestionnaire: true },
+  { id: 'team', label: '4. Team', icon: Users, description: 'Key personnel and expertise', hasQuestionnaire: true },
+  { id: 'approach', label: '5. Approach', icon: Route, description: 'Research strategy and methods', hasQuestionnaire: true },
+  { id: 'budget', label: '6. Budget', icon: DollarSign, description: 'Multi-year budget planning', hasQuestionnaire: true },
+  { id: 'preliminary_data', label: '7. Preliminary Data', icon: Database, description: 'Supporting data', hasQuestionnaire: true },
+  { id: 'summary_figure', label: '8. Summary Figure', icon: Image, description: 'Visual summary', hasQuestionnaire: true },
 ];
 
 export default function ProjectEditorPage() {
@@ -49,6 +54,8 @@ export default function ProjectEditorPage() {
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [moduleData, setModuleData] = useState<Record<string, unknown>>({});
+  const [titleSuggestions, setTitleSuggestions] = useState<string[]>([]);
+  const [loadingTitles, setLoadingTitles] = useState(false);
 
   useEffect(() => {
     if (id) fetchProject();
@@ -56,7 +63,7 @@ export default function ProjectEditorPage() {
 
   const fetchProject = async () => {
     const { data, error } = await supabase
-      .from('projects')
+      .from('gf_projects')
       .select('*')
       .eq('id', id)
       .maybeSingle();
@@ -83,7 +90,7 @@ export default function ProjectEditorPage() {
     setSaving(true);
 
     const { error } = await supabase
-      .from('projects')
+      .from('gf_projects')
       .update({
         [activeModule]: moduleData,
         updated_at: new Date().toISOString()
@@ -97,6 +104,44 @@ export default function ProjectEditorPage() {
       setProject({ ...project, [activeModule]: moduleData });
     }
     setSaving(false);
+  };
+
+  const generateTitleSuggestions = async () => {
+    if (!project) return;
+    setLoadingTitles(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('grant-ai', {
+        body: {
+          module: 'title',
+          action: 'suggest',
+          data: { currentTitle: project.title },
+          projectContext: {
+            concept: project.concept,
+            hypothesis: project.hypothesis,
+            specific_aims: project.specific_aims
+          }
+        }
+      });
+      if (error) throw error;
+      if (data?.data?.suggestions) {
+        setTitleSuggestions(data.data.suggestions);
+      } else {
+        // Fallback suggestions based on project data
+        setTitleSuggestions([
+          `Innovative Approaches to ${project.title || 'Research'}`,
+          `${project.title || 'Study'}: A Novel Investigation`,
+          `Advancing ${project.title || 'Science'} Through New Methods`
+        ]);
+      }
+    } catch (error) {
+      // Generate fallback suggestions
+      setTitleSuggestions([
+        `Innovative Approaches to ${project.title || 'Research'}`,
+        `${project.title || 'Study'}: A Novel Investigation`,
+        `Advancing ${project.title || 'Science'} Through New Methods`
+      ]);
+    }
+    setLoadingTitles(false);
   };
 
   const generateWithAI = async () => {
@@ -218,6 +263,55 @@ export default function ProjectEditorPage() {
         {/* Main Content */}
         <main className="flex-1 overflow-y-auto">
           <div className="max-w-4xl mx-auto px-8 py-8">
+            {/* Project Title - Always Visible */}
+            <div className="mb-8 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl p-6 border border-indigo-100">
+              <label className="block text-sm font-medium text-indigo-700 mb-2">Project Title</label>
+              <div className="flex items-center gap-3">
+                <input
+                  type="text"
+                  value={project?.title || ''}
+                  onChange={async (e) => {
+                    const newTitle = e.target.value;
+                    setProject(prev => prev ? { ...prev, title: newTitle } : null);
+                    setTitleSuggestions([]);
+                    await supabase
+                      .from('gf_projects')
+                      .update({ title: newTitle, updated_at: new Date().toISOString() })
+                      .eq('id', project?.id);
+                  }}
+                  placeholder="Enter your grant project title..."
+                  className="flex-1 text-2xl font-bold text-slate-900 bg-transparent border-none focus:outline-none focus:ring-0 placeholder-slate-400"
+                />
+                <button
+                  onClick={generateTitleSuggestions}
+                  disabled={loadingTitles}
+                  className="flex items-center gap-2 px-4 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-all text-sm font-medium disabled:opacity-50"
+                >
+                  {loadingTitles ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                  Suggest Titles
+                </button>
+              </div>
+              {titleSuggestions.length > 0 && (
+                <div className="mt-4 space-y-2">
+                  <p className="text-sm font-medium text-indigo-600">AI Suggestions:</p>
+                  {titleSuggestions.map((suggestion, idx) => (
+                    <AISuggestion
+                      key={idx}
+                      suggestion={{ id: `title-${idx}`, text: suggestion }}
+                      onAccept={async (text) => {
+                        setProject(prev => prev ? { ...prev, title: text } : null);
+                        await supabase.from('gf_projects').update({ title: text, updated_at: new Date().toISOString() }).eq('id', project?.id);
+                        setTitleSuggestions([]);
+                        toast.success('Title updated!');
+                      }}
+                      onReject={() => setTitleSuggestions(prev => prev.filter((_, i) => i !== idx))}
+                      label={`Option ${idx + 1}`}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h1 className="text-2xl font-bold text-slate-900">
@@ -341,6 +435,11 @@ function ModuleEditor({ module, data, onChange, project }: ModuleEditorProps) {
         <AnalysisDashboard project={project} />
       );
 
+    case 'compile':
+      return (
+        <CompileGrant project={project} />
+      );
+
     case 'history':
       return (
         <VersionHistory projectId={project?.id || ''} />
@@ -348,125 +447,45 @@ function ModuleEditor({ module, data, onChange, project }: ModuleEditorProps) {
 
     case 'concept':
       return (
-        <div className="bg-white rounded-xl border border-slate-200 p-6">
-          {renderTextArea('gap_statement', 'Knowledge Gap Statement', 'Describe the gap in current knowledge your research addresses...')}
-          {renderTextArea('clinical_burden', 'Clinical/Scientific Burden', 'Describe the clinical burden or scientific importance...')}
-          {renderTextArea('innovation', 'Innovation', 'What makes your approach innovative?')}
-          {renderTextArea('long_term_goal', 'Long-term Goal', 'What is the long-term goal of this research program?')}
-          {renderTextArea('content', 'AI Generated Content', 'AI-generated content will appear here...', 8)}
-        </div>
+        <GuidedQuestionnaire module="concept" data={data} onChange={onChange} />
       );
 
     case 'hypothesis':
       return (
-        <div className="bg-white rounded-xl border border-slate-200 p-6">
-          {renderTextArea('central_hypothesis', 'Central Hypothesis', 'State your central hypothesis...')}
-          {renderTextArea('rationale', 'Scientific Rationale', 'Provide the rationale supporting your hypothesis...')}
-          {renderTextArea('alternative_hypotheses', 'Alternative Hypotheses', 'What alternative hypotheses have you considered?')}
-          <div className="mb-6 p-4 bg-slate-50 rounded-lg">
-            <h4 className="font-medium text-slate-900 mb-2">Hypothesis Checklist</h4>
-            <label className="flex items-center gap-2 mb-2">
-              <input 
-                type="checkbox" 
-                checked={data.is_testable as boolean || false}
-                onChange={(e) => updateField('is_testable', e.target.checked)}
-                className="rounded text-indigo-600"
-              />
-              <span className="text-sm text-slate-600">Testable within scope of project</span>
-            </label>
-            <label className="flex items-center gap-2 mb-2">
-              <input 
-                type="checkbox" 
-                checked={data.is_falsifiable as boolean || false}
-                onChange={(e) => updateField('is_falsifiable', e.target.checked)}
-                className="rounded text-indigo-600"
-              />
-              <span className="text-sm text-slate-600">Falsifiable with proposed methods</span>
-            </label>
-            <label className="flex items-center gap-2">
-              <input 
-                type="checkbox" 
-                checked={data.has_prelim_support as boolean || false}
-                onChange={(e) => updateField('has_prelim_support', e.target.checked)}
-                className="rounded text-indigo-600"
-              />
-              <span className="text-sm text-slate-600">Supported by preliminary data</span>
-            </label>
-          </div>
-        </div>
+        <GuidedQuestionnaire module="hypothesis" data={data} onChange={onChange} />
       );
 
     case 'specific_aims':
       return (
-        <div className="bg-white rounded-xl border border-slate-200 p-6">
-          {renderTextArea('aim1', 'Specific Aim 1', 'Define Aim 1 with objectives and sub-aims...')}
-          {renderTextArea('aim1_rationale', 'Aim 1 Rationale', 'Scientific rationale for Aim 1...')}
-          {renderTextArea('aim2', 'Specific Aim 2', 'Define Aim 2 with objectives and sub-aims...')}
-          {renderTextArea('aim2_rationale', 'Aim 2 Rationale', 'Scientific rationale for Aim 2...')}
-          {renderTextArea('aim3', 'Specific Aim 3 (Optional)', 'Define Aim 3 if applicable...')}
-          <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-            <div className="text-sm text-amber-800">
-              <p className="font-medium mb-1">Dependency Risk Analysis</p>
-              <p>Ensure aims are independent enough that failure of one does not prevent completion of others.</p>
-            </div>
-          </div>
-        </div>
+        <GuidedQuestionnaire module="specific_aims" data={data} onChange={onChange} />
       );
 
     case 'team':
       return (
-        <div className="bg-white rounded-xl border border-slate-200 p-6">
-          {renderInput('pi_name', 'Principal Investigator', 'Name of PI')}
-          {renderTextArea('pi_expertise', 'PI Expertise', 'Key expertise and qualifications...')}
-          {renderInput('pi_effort', 'PI Effort (%)', 'e.g., 25', 'number')}
-          <div className="border-t border-slate-200 my-6 pt-6">
-            <h4 className="font-medium text-slate-900 mb-4">Co-Investigators / Key Personnel</h4>
-            {renderTextArea('coinvestigators', 'Co-Investigators', 'List co-investigators with their roles and expertise...')}
-            {renderTextArea('consultants', 'Consultants/Collaborators', 'List any consultants or collaborators...')}
-          </div>
-        </div>
+        <GuidedQuestionnaire module="team" data={data} onChange={onChange} />
       );
 
     case 'approach':
       return (
-        <div className="bg-white rounded-xl border border-slate-200 p-6">
-          {renderTextArea('overall_strategy', 'Overall Strategy', 'Describe the overall research strategy...')}
-          {renderTextArea('methodology', 'Methodology', 'Describe key methods and experimental design...')}
-          {renderTextArea('timeline', 'Timeline', 'Describe the project timeline with milestones...')}
-          {renderTextArea('expected_outcomes', 'Expected Outcomes', 'What outcomes do you expect?')}
-          {renderTextArea('alternative_approaches', 'Alternative Approaches', 'What alternatives exist if primary approach fails?')}
-          {renderTextArea('rigor', 'Scientific Rigor', 'How will you ensure scientific rigor?')}
-        </div>
+        <GuidedQuestionnaire module="approach" data={data} onChange={onChange} />
       );
 
     case 'budget':
-      return <BudgetDirector data={data} onChange={onChange} project={project} />;
+      return (
+        <div className="space-y-6">
+          <GuidedQuestionnaire module="budget" data={data} onChange={onChange} />
+          <BudgetDirector data={data} onChange={onChange} project={project} />
+        </div>
+      );
 
     case 'preliminary_data':
       return (
-        <div className="bg-white rounded-xl border border-slate-200 p-6">
-          {renderTextArea('data_summary', 'Data Summary', 'Summarize your preliminary/supporting data...')}
-          {renderTextArea('key_findings', 'Key Findings', 'What are the key findings that support feasibility?')}
-          {renderTextArea('publications', 'Relevant Publications', 'List relevant publications from your group...')}
-          {renderTextArea('figure_descriptions', 'Figure Descriptions', 'Describe preliminary data figures to include...')}
-        </div>
+        <GuidedQuestionnaire module="preliminary_data" data={data} onChange={onChange} />
       );
 
     case 'summary_figure':
       return (
-        <div className="bg-white rounded-xl border border-slate-200 p-6">
-          {renderTextArea('figure_concept', 'Figure Concept', 'Describe the concept for your summary figure...')}
-          {renderTextArea('key_elements', 'Key Visual Elements', 'List the key elements to include in the figure...')}
-          {renderTextArea('narrative_flow', 'Narrative Flow', 'How should the figure guide the reader through your research?')}
-          <div className="p-4 bg-slate-50 rounded-lg">
-            <p className="text-sm text-slate-600">
-              Tip: An effective summary figure should communicate your research concept, 
-              approach, and expected outcomes in a single, compelling visual that reviewers 
-              can understand at a glance.
-            </p>
-          </div>
-        </div>
+        <GuidedQuestionnaire module="summary_figure" data={data} onChange={onChange} />
       );
 
     default:

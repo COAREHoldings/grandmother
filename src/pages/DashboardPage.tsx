@@ -27,7 +27,7 @@ export default function DashboardPage() {
 
   const fetchProjects = async () => {
     const { data, error } = await supabase
-      .from('projects')
+      .from('gf_projects')
       .select('*')
       .eq('user_id', user?.id)
       .order('updated_at', { ascending: false });
@@ -43,7 +43,7 @@ export default function DashboardPage() {
   const deleteProject = async (id: string) => {
     if (!confirm('Are you sure you want to delete this project?')) return;
 
-    const { error } = await supabase.from('projects').delete().eq('id', id);
+    const { error } = await supabase.from('gf_projects').delete().eq('id', id);
     if (error) {
       toast.error('Failed to delete project');
     } else {

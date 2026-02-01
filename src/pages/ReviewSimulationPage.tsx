@@ -60,7 +60,7 @@ export default function ReviewSimulationPage() {
 
   const fetchProject = async () => {
     const { data, error } = await supabase
-      .from('projects')
+      .from('gf_projects')
       .select('*')
       .eq('id', id)
       .maybeSingle();
@@ -92,7 +92,7 @@ export default function ReviewSimulationPage() {
         setResult(data.data);
         
         await supabase
-          .from('projects')
+          .from('gf_projects')
           .update({ review_simulation: data.data })
           .eq('id', project.id);
         

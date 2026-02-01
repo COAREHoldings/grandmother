@@ -33,7 +33,7 @@ export default function LoginPage() {
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-2">
             <FileText className="w-10 h-10 text-white" />
-            <span className="text-2xl font-bold text-white">Grand Mother</span>
+            <span className="text-2xl font-bold text-white">GrantMother</span>
           </Link>
         </div>
 

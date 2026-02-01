@@ -60,7 +60,7 @@ export default function PricingPage() {
     const isCustom = ['institution', 'enterprise'].includes(planId);
     
     if (isCustom) {
-      toast.success('Contact sales@grantfather.ai for custom pricing');
+      toast.success('Contact sales@grantmother.ai for custom pricing');
       return;
     }
 

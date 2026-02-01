@@ -31,13 +31,13 @@ export default function LandingPage() {
     <div className="bg-white">
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-indigo-900 to-slate-900">
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAwIDYwIEwgNjAgMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDUpIiBzdHJva2Utd2lkdGg9IjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')] opacity-50"></div>
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGM0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAwIDYwIEwgNjAgMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDUpIiBzdHJva2Utd2lkdGg9IjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')] opacity-50"></div>
         <nav className="relative max-w-7xl mx-auto px-4 py-6 flex justify-between items-center">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center">
-              <span className="text-white font-bold">GF</span>
+              <span className="text-white font-bold">GM</span>
             </div>
-            <span className="text-2xl font-bold text-white">GRANTFATHER</span>
+            <span className="text-2xl font-bold text-white">GrantMother</span>
           </div>
           <div className="flex items-center gap-4">
             <Link to="/login" className="text-slate-300 hover:text-white transition-colors">Sign In</Link>
@@ -60,7 +60,7 @@ export default function LandingPage() {
               </span>
             </h1>
             <p className="text-xl text-slate-300 max-w-2xl mx-auto mb-10">
-              Whether you're an academic researcher or a startup founder, GRANTFATHER provides 
+              Whether you're an academic researcher or a startup founder, GrantMother provides 
               the AI-powered tools you need to win grants and contracts.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -259,7 +259,7 @@ export default function LandingPage() {
             Ready to Fund Your Research?
           </h2>
           <p className="text-xl text-indigo-100 mb-10">
-            Join thousands of researchers and startups winning grants with GRANTFATHER.
+            Join thousands of researchers and startups winning grants with GrantMother.
           </p>
           <Link
             to="/register"
@@ -276,11 +276,11 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">GF</span>
+              <span className="text-white font-bold text-sm">GM</span>
             </div>
-            <span className="text-white font-semibold">GRANTFATHER</span>
+            <span className="text-white font-semibold">GrantMother</span>
           </div>
-          <p className="text-slate-400 text-sm">© 2026 GRANTFATHER. All rights reserved.</p>
+          <p className="text-slate-400 text-sm">© 2026 GrantMother. All rights reserved.</p>
         </div>
       </footer>
     </div>

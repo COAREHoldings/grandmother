@@ -103,7 +103,7 @@ export default function OnboardingPage() {
       await supabase.from('gf_users').update({ plan_tier: planId }).eq('id', user.id);
     }
 
-    toast.success('Welcome to GRANTFATHER!');
+    toast.success('Welcome to GrantMother!');
     navigate('/dashboard');
     setLoading(false);
   };
@@ -115,7 +115,7 @@ export default function OnboardingPage() {
       <div className="max-w-4xl mx-auto px-4 py-12">
         {/* Logo */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-white mb-2">GRANTFATHER</h1>
+          <h1 className="text-4xl font-bold text-white mb-2">GrantMother</h1>
           <p className="text-indigo-300">AI-Powered Grant Writing Platform</p>
         </div>
 
