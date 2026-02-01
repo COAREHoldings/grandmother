@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { supabase } from '@/lib/supabase';
-import { BarChart3, Users, DollarSign, TrendingUp, Building2, GraduationCap, AlertTriangle } from 'lucide-react';
+import { BarChart3, Users, DollarSign, TrendingUp, Building2, GraduationCap, AlertTriangle, Shield } from 'lucide-react';
+import SentinelDashboard from '@/components/SentinelDashboard';
 
 interface AnalyticsData {
   academicUsers: number;
@@ -20,6 +21,7 @@ interface AnalyticsData {
 export default function AdminDashboardPage() {
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'analytics' | 'sentinel'>('analytics');
 
   useEffect(() => {
     fetchAnalytics();
@@ -71,11 +73,33 @@ export default function AdminDashboardPage() {
   return (
     <Layout>
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-900">Admin Analytics</h1>
-          <p className="text-slate-600">Platform performance and revenue metrics</p>
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900">Admin Dashboard</h1>
+            <p className="text-slate-600">Platform management and monitoring</p>
+          </div>
+          <div className="flex gap-2 bg-slate-100 p-1 rounded-lg">
+            <button onClick={() => setActiveTab('analytics')}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                activeTab === 'analytics' ? 'bg-white text-slate-900 shadow' : 'text-slate-600 hover:text-slate-900'
+              }`}>
+              <BarChart3 className="w-4 h-4 inline mr-2" />Analytics
+            </button>
+            <button onClick={() => setActiveTab('sentinel')}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                activeTab === 'sentinel' ? 'bg-white text-slate-900 shadow' : 'text-slate-600 hover:text-slate-900'
+              }`}>
+              <Shield className="w-4 h-4 inline mr-2" />Sentinel
+            </button>
+          </div>
         </div>
 
+        {activeTab === 'sentinel' ? (
+          <div className="bg-slate-900 rounded-2xl p-6">
+            <SentinelDashboard />
+          </div>
+        ) : (
+        <>
         {/* Revenue Cards */}
         <div className="grid md:grid-cols-4 gap-6 mb-8">
           <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl p-6 text-white">
@@ -194,6 +218,8 @@ export default function AdminDashboardPage() {
             </div>
           </div>
         </div>
+        </>
+        )}
       </div>
     </Layout>
   );
