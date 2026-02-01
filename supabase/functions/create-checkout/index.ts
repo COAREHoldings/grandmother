@@ -10,33 +10,72 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { planType, customerEmail, successUrl, cancelUrl } = await req.json();
+    const { planType, userType, customerEmail, userId, successUrl, cancelUrl } = await req.json();
     
     const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY');
     if (!stripeSecretKey) {
       throw new Error('Stripe not configured. Please add STRIPE_SECRET_KEY to your environment.');
     }
 
-    const planConfig: Record<string, { amount: number; name: string }> = {
-      free: { amount: 0, name: 'Free Plan' },
-      pro: { amount: 2900, name: 'Pro Plan - $29/month' },
-      enterprise: { amount: 19900, name: 'Enterprise Plan - $199/month' }
+    // GRANTFATHER plan pricing (amounts in cents)
+    const planConfig: Record<string, { amount: number; name: string; interval: string }> = {
+      // Academic plans
+      fellow: { amount: 0, name: 'Fellow (Free)', interval: 'month' },
+      pi: { amount: 4900, name: 'PI Plan - $49/month', interval: 'month' },
+      department: { amount: 29900, name: 'Department Plan - $299/month', interval: 'month' },
+      institution: { amount: 0, name: 'Institution (Custom)', interval: 'month' },
+      // Commercial plans
+      founder: { amount: 0, name: 'Founder (Free)', interval: 'month' },
+      startup_pro: { amount: 9900, name: 'Startup Pro - $99/month', interval: 'month' },
+      growth_lab: { amount: 39900, name: 'Growth Lab - $399/month', interval: 'month' },
+      enterprise: { amount: 0, name: 'Enterprise (Custom)', interval: 'month' },
+      // Legacy plans
+      free: { amount: 0, name: 'Free Plan', interval: 'month' },
+      pro: { amount: 2900, name: 'Pro Plan - $29/month', interval: 'month' },
     };
 
     const plan = planConfig[planType];
     if (!plan) {
-      throw new Error('Invalid plan type');
+      throw new Error(`Invalid plan type: ${planType}`);
     }
 
+    // Free and custom plans don't require payment
     if (plan.amount === 0) {
+      // Update user profile directly for free plans
+      if (userId) {
+        const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+        const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+        
+        await fetch(`${supabaseUrl}/rest/v1/gf_users?id=eq.${userId}`, {
+          method: 'PATCH',
+          headers: {
+            'Authorization': `Bearer ${serviceKey}`,
+            'apikey': serviceKey,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify({
+            plan_tier: planType,
+            user_type: userType || 'academic',
+            subscription_status: 'active'
+          })
+        });
+      }
+
       return new Response(JSON.stringify({
-        data: { message: 'Free plan does not require payment', plan: 'free' }
+        data: { 
+          message: plan.amount === 0 && ['institution', 'enterprise'].includes(planType) 
+            ? 'Contact sales@grantfather.ai for custom enterprise pricing'
+            : 'Free plan activated successfully',
+          plan: planType,
+          requiresPayment: false
+        }
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
-    // Create Stripe checkout session
+    // Create Stripe checkout session for paid plans
     const response = await fetch('https://api.stripe.com/v1/checkout/sessions', {
       method: 'POST',
       headers: {
@@ -46,20 +85,22 @@ Deno.serve(async (req) => {
       body: new URLSearchParams({
         'mode': 'subscription',
         'customer_email': customerEmail,
-        'success_url': successUrl || `${req.headers.get('origin')}/pricing?subscription=success`,
+        'success_url': successUrl || `${req.headers.get('origin')}/pricing?subscription=success&plan=${planType}`,
         'cancel_url': cancelUrl || `${req.headers.get('origin')}/pricing?subscription=cancelled`,
         'line_items[0][price_data][currency]': 'usd',
         'line_items[0][price_data][product_data][name]': plan.name,
         'line_items[0][price_data][unit_amount]': plan.amount.toString(),
-        'line_items[0][price_data][recurring][interval]': 'month',
+        'line_items[0][price_data][recurring][interval]': plan.interval,
         'line_items[0][quantity]': '1',
-        'metadata[plan_type]': planType
+        'metadata[plan_type]': planType,
+        'metadata[user_type]': userType || 'academic',
+        'metadata[user_id]': userId || ''
       }).toString()
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Stripe error: ${errorText}`);
+      const errorData = await response.json();
+      throw new Error(`Stripe error: ${errorData.error?.message || 'Unknown error'}`);
     }
 
     const session = await response.json();
@@ -67,7 +108,8 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({
       data: {
         checkoutUrl: session.url,
-        sessionId: session.id
+        sessionId: session.id,
+        requiresPayment: true
       }
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
