@@ -31,12 +31,14 @@ import {
   ShieldCheck
 } from 'lucide-react';
 import RIEDashboard from '@/components/RIEDashboard';
+import SAEDashboard from '@/components/SAEDashboard';
 import DirectEditor from '@/components/DirectEditor';
 import toast from 'react-hot-toast';
 
 const modules = [
   { id: 'analysis', label: 'Analysis', icon: BarChart3, description: 'Document upload & scoring' },
   { id: 'rie', label: 'Reference Integrity', icon: ShieldCheck, description: 'Claim verification & scoring' },
+  { id: 'sae', label: 'Statistical Analysis', icon: BarChart3, description: 'Per-aim statistical planning' },
   { id: 'compile', label: 'Compile Grant', icon: FileOutput, description: 'Generate formatted grant document' },
   { id: 'history', label: 'History', icon: RefreshCw, description: 'Version history & comparisons' },
   { id: 'concept', label: '1. Concept', icon: Lightbulb, description: 'Research concept and significance', hasQuestionnaire: true },
@@ -480,6 +482,11 @@ function ModuleEditor({ module, data, onChange, project }: ModuleEditorProps) {
     case 'analysis':
       return (
         <AnalysisDashboard project={project} />
+      );
+
+    case 'sae':
+      return (
+        <SAEDashboard projectId={project?.id || ''} />
       );
 
     case 'rie':
