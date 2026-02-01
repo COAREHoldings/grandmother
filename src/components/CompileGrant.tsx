@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { FileText, Download, Copy, Loader2, CheckCircle, Sparkles } from 'lucide-react';
+import { Document, Packer, Paragraph, TextRun, HeadingLevel } from 'docx';
+import { saveAs } from 'file-saver';
 import { Project } from '@/lib/supabase';
 import toast from 'react-hot-toast';
 
@@ -337,6 +339,36 @@ export default function CompileGrant({ project }: Props) {
     toast.success('Downloaded as Plain Text');
   };
 
+  const downloadAsDocx = async () => {
+    const children: Paragraph[] = [];
+    const lines = editedGrant.split('\n');
+    
+    for (const line of lines) {
+      if (line.startsWith('# ')) {
+        children.push(new Paragraph({ text: line.slice(2), heading: HeadingLevel.TITLE }));
+      } else if (line.startsWith('## ')) {
+        children.push(new Paragraph({ text: line.slice(3), heading: HeadingLevel.HEADING_1 }));
+      } else if (line.startsWith('### ')) {
+        children.push(new Paragraph({ text: line.slice(4), heading: HeadingLevel.HEADING_2 }));
+      } else if (line.startsWith('**') && line.endsWith('**')) {
+        children.push(new Paragraph({ children: [new TextRun({ text: line.slice(2, -2), bold: true })] }));
+      } else if (line.includes('**')) {
+        const parts = line.split(/\*\*/);
+        const runs = parts.map((part, i) => new TextRun({ text: part, bold: i % 2 === 1 }));
+        children.push(new Paragraph({ children: runs }));
+      } else if (line.trim() === '---') {
+        children.push(new Paragraph({ text: '' }));
+      } else {
+        children.push(new Paragraph({ text: line }));
+      }
+    }
+
+    const doc = new Document({ sections: [{ children }] });
+    const blob = await Packer.toBlob(doc);
+    saveAs(blob, `${project?.title || 'grant'}_compiled.docx`);
+    toast.success('Downloaded as DOCX');
+  };
+
   // Calculate completion
   const getModuleCompleteness = () => {
     const modules = ['concept', 'hypothesis', 'specific_aims', 'team', 'approach', 'budget', 'preliminary_data', 'summary_figure'];
@@ -422,6 +454,13 @@ export default function CompileGrant({ project }: Props) {
               >
                 <Download className="w-4 h-4" />
                 .txt
+              </button>
+              <button
+                onClick={downloadAsDocx}
+                className="flex items-center gap-2 px-3 py-1.5 bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg transition-all"
+              >
+                <Download className="w-4 h-4" />
+                .docx
               </button>
             </div>
           </div>

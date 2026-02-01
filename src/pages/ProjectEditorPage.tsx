@@ -237,6 +237,13 @@ export default function ProjectEditorPage() {
 
           <div className="p-4 border-t border-slate-200 space-y-2">
             <button
+              onClick={() => navigate(`/projects/${id}/research`)}
+              className="w-full flex items-center justify-center gap-2 bg-emerald-600 text-white py-3 rounded-lg hover:bg-emerald-700 transition-all"
+            >
+              <Database className="w-5 h-5" />
+              Research Tools
+            </button>
+            <button
               onClick={() => navigate(`/projects/${id}/review`)}
               className="w-full flex items-center justify-center gap-2 bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 transition-all"
             >
@@ -322,11 +329,13 @@ export default function ProjectEditorPage() {
                 </p>
               </div>
               <div className="flex items-center gap-3">
-                <button
-                  onClick={generateWithAI}
-                  disabled={generating}
-                  className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-all disabled:opacity-50"
-                >
+                {/* Hide legacy AI button for questionnaire modules - use granular suggestions instead */}
+                {!modules.find(m => m.id === activeModule)?.hasQuestionnaire && (
+                  <button
+                    onClick={generateWithAI}
+                    disabled={generating}
+                    className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-all disabled:opacity-50"
+                  >
                   {generating ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
                   ) : (
@@ -334,6 +343,7 @@ export default function ProjectEditorPage() {
                   )}
                   Generate with AI
                 </button>
+                )}
                 <button
                   onClick={saveModule}
                   disabled={saving}

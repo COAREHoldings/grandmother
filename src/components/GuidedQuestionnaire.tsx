@@ -1,5 +1,8 @@
 import { useState } from 'react';
-import { ChevronRight, ChevronLeft, CheckCircle, HelpCircle } from 'lucide-react';
+import { ChevronRight, ChevronLeft, CheckCircle, HelpCircle, Sparkles, Loader2 } from 'lucide-react';
+import { AISuggestion } from './AISuggestion';
+import { supabase } from '@/lib/supabase';
+import toast from 'react-hot-toast';
 
 interface Question {
   id: string;
@@ -9,11 +12,12 @@ interface Question {
   required?: boolean;
 }
 
-interface ModuleQuestions {
-  [key: string]: Question[];
+interface Suggestion {
+  id: string;
+  text: string;
 }
 
-const MODULE_QUESTIONS: ModuleQuestions = {
+const MODULE_QUESTIONS: Record<string, Question[]> = {
   concept: [
     { id: 'problem_statement', question: 'What specific problem or gap in knowledge are you addressing?', hint: 'Be specific about what is unknown or unsolved in your field.', type: 'textarea', required: true },
     { id: 'why_important', question: 'Why does this problem matter? What is the impact if solved?', hint: 'Describe the clinical, scientific, or societal burden.', type: 'textarea', required: true },
@@ -87,13 +91,61 @@ interface Props {
 export default function GuidedQuestionnaire({ module, data, onChange }: Props) {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [showAllQuestions, setShowAllQuestions] = useState(false);
+  const [suggestions, setSuggestions] = useState<Record<string, Suggestion[]>>({});
+  const [loadingId, setLoadingId] = useState<string | null>(null);
 
   const questions = MODULE_QUESTIONS[module] || [];
-  
   if (questions.length === 0) return null;
 
   const updateAnswer = (questionId: string, value: string | number) => {
     onChange({ ...data, [questionId]: value });
+    setSuggestions(prev => ({ ...prev, [questionId]: [] }));
+  };
+
+  const generateSuggestion = async (questionId: string, question: string) => {
+    setLoadingId(questionId);
+    try {
+      const { data: result } = await supabase.functions.invoke('grant-ai', {
+        body: {
+          module,
+          action: 'suggest_answer',
+          data: { questionId, question, currentAnswer: data[questionId] || '' },
+          projectContext: data
+        }
+      });
+
+      const suggestionTexts = result?.data?.suggestions || [
+        `Consider expanding on the ${question.toLowerCase().replace('?', '')} with specific examples and data.`,
+        `Add quantitative metrics to strengthen this response.`,
+        `Connect this answer to your specific aims for better coherence.`
+      ];
+
+      setSuggestions(prev => ({
+        ...prev,
+        [questionId]: suggestionTexts.map((text: string, idx: number) => ({
+          id: `${questionId}-${idx}`,
+          text
+        }))
+      }));
+    } catch (error) {
+      toast.error('Could not generate suggestions');
+    }
+    setLoadingId(null);
+  };
+
+  const acceptSuggestion = (questionId: string, text: string) => {
+    const current = (data[questionId] as string) || '';
+    const newValue = current ? `${current}\n\n${text}` : text;
+    onChange({ ...data, [questionId]: newValue });
+    setSuggestions(prev => ({ ...prev, [questionId]: [] }));
+    toast.success('Suggestion applied!');
+  };
+
+  const rejectSuggestion = (questionId: string, suggestionId: string) => {
+    setSuggestions(prev => ({
+      ...prev,
+      [questionId]: prev[questionId]?.filter(s => s.id !== suggestionId) || []
+    }));
   };
 
   const getProgress = () => {
@@ -111,23 +163,69 @@ export default function GuidedQuestionnaire({ module, data, onChange }: Props) {
 
   const currentQ = questions[currentQuestion];
 
+  const renderQuestionInput = (q: Question) => (
+    <div className="space-y-3">
+      {q.type === 'textarea' ? (
+        <textarea
+          value={(data[q.id] as string) || ''}
+          onChange={(e) => updateAnswer(q.id, e.target.value)}
+          rows={showAllQuestions ? 3 : 6}
+          placeholder="Type your answer here..."
+          className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none"
+        />
+      ) : q.type === 'number' ? (
+        <input
+          type="number"
+          value={(data[q.id] as number) || ''}
+          onChange={(e) => updateAnswer(q.id, Number(e.target.value))}
+          placeholder="Enter a number..."
+          className="w-full max-w-xs px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+        />
+      ) : (
+        <input
+          type="text"
+          value={(data[q.id] as string) || ''}
+          onChange={(e) => updateAnswer(q.id, e.target.value)}
+          placeholder="Type your answer here..."
+          className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+        />
+      )}
+
+      {/* AI Suggest Button */}
+      {q.type !== 'number' && (
+        <button
+          onClick={() => generateSuggestion(q.id, q.question)}
+          disabled={loadingId === q.id}
+          className="flex items-center gap-2 px-3 py-1.5 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-all text-sm font-medium disabled:opacity-50"
+        >
+          {loadingId === q.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+          Get AI Suggestions
+        </button>
+      )}
+
+      {/* AI Suggestions with Accept/Edit/Reject */}
+      {suggestions[q.id]?.map((suggestion) => (
+        <AISuggestion
+          key={suggestion.id}
+          suggestion={suggestion}
+          onAccept={(text) => acceptSuggestion(q.id, text)}
+          onReject={(id) => rejectSuggestion(q.id, id)}
+        />
+      ))}
+    </div>
+  );
+
   if (showAllQuestions) {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <div className="w-32 h-2 bg-slate-200 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-indigo-600 rounded-full transition-all"
-                style={{ width: `${getProgress()}%` }}
-              />
+              <div className="h-full bg-indigo-600 rounded-full transition-all" style={{ width: `${getProgress()}%` }} />
             </div>
             <span className="text-sm text-slate-600">{getProgress()}% complete</span>
           </div>
-          <button
-            onClick={() => setShowAllQuestions(false)}
-            className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
-          >
+          <button onClick={() => setShowAllQuestions(false)} className="text-sm text-indigo-600 hover:text-indigo-700 font-medium">
             Switch to Guided Mode
           </button>
         </div>
@@ -135,14 +233,8 @@ export default function GuidedQuestionnaire({ module, data, onChange }: Props) {
         {questions.map((q, idx) => (
           <div key={q.id} className="bg-white rounded-xl border border-slate-200 p-5">
             <div className="flex items-start gap-3 mb-3">
-              <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
-                isQuestionAnswered(q.id) ? 'bg-emerald-100' : 'bg-slate-100'
-              }`}>
-                {isQuestionAnswered(q.id) ? (
-                  <CheckCircle className="w-4 h-4 text-emerald-600" />
-                ) : (
-                  <span className="text-xs font-medium text-slate-500">{idx + 1}</span>
-                )}
+              <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${isQuestionAnswered(q.id) ? 'bg-emerald-100' : 'bg-slate-100'}`}>
+                {isQuestionAnswered(q.id) ? <CheckCircle className="w-4 h-4 text-emerald-600" /> : <span className="text-xs font-medium text-slate-500">{idx + 1}</span>}
               </div>
               <div className="flex-1">
                 <label className="block font-medium text-slate-900 mb-1">
@@ -150,28 +242,7 @@ export default function GuidedQuestionnaire({ module, data, onChange }: Props) {
                   {q.required && <span className="text-red-500 ml-1">*</span>}
                 </label>
                 <p className="text-sm text-slate-500 mb-3">{q.hint}</p>
-                {q.type === 'textarea' ? (
-                  <textarea
-                    value={(data[q.id] as string) || ''}
-                    onChange={(e) => updateAnswer(q.id, e.target.value)}
-                    rows={3}
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none"
-                  />
-                ) : q.type === 'number' ? (
-                  <input
-                    type="number"
-                    value={(data[q.id] as number) || ''}
-                    onChange={(e) => updateAnswer(q.id, Number(e.target.value))}
-                    className="w-full max-w-xs px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  />
-                ) : (
-                  <input
-                    type="text"
-                    value={(data[q.id] as string) || ''}
-                    onChange={(e) => updateAnswer(q.id, e.target.value)}
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  />
-                )}
+                {renderQuestionInput(q)}
               </div>
             </div>
           </div>
@@ -182,7 +253,6 @@ export default function GuidedQuestionnaire({ module, data, onChange }: Props) {
 
   return (
     <div className="space-y-6">
-      {/* Progress */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="flex gap-1">
@@ -191,28 +261,18 @@ export default function GuidedQuestionnaire({ module, data, onChange }: Props) {
                 key={idx}
                 onClick={() => setCurrentQuestion(idx)}
                 className={`w-8 h-2 rounded-full transition-all ${
-                  idx === currentQuestion 
-                    ? 'bg-indigo-600' 
-                    : isQuestionAnswered(questions[idx].id)
-                      ? 'bg-emerald-400'
-                      : 'bg-slate-200'
+                  idx === currentQuestion ? 'bg-indigo-600' : isQuestionAnswered(questions[idx].id) ? 'bg-emerald-400' : 'bg-slate-200'
                 }`}
               />
             ))}
           </div>
-          <span className="text-sm text-slate-600">
-            Question {currentQuestion + 1} of {questions.length}
-          </span>
+          <span className="text-sm text-slate-600">Question {currentQuestion + 1} of {questions.length}</span>
         </div>
-        <button
-          onClick={() => setShowAllQuestions(true)}
-          className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
-        >
+        <button onClick={() => setShowAllQuestions(true)} className="text-sm text-indigo-600 hover:text-indigo-700 font-medium">
           Show All Questions
         </button>
       </div>
 
-      {/* Current Question Card */}
       <div className="bg-white rounded-2xl border border-slate-200 p-8">
         <div className="flex items-start gap-4 mb-6">
           <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0">
@@ -227,33 +287,8 @@ export default function GuidedQuestionnaire({ module, data, onChange }: Props) {
           </div>
         </div>
 
-        {currentQ.type === 'textarea' ? (
-          <textarea
-            value={(data[currentQ.id] as string) || ''}
-            onChange={(e) => updateAnswer(currentQ.id, e.target.value)}
-            rows={6}
-            placeholder="Type your answer here..."
-            className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none text-lg"
-          />
-        ) : currentQ.type === 'number' ? (
-          <input
-            type="number"
-            value={(data[currentQ.id] as number) || ''}
-            onChange={(e) => updateAnswer(currentQ.id, Number(e.target.value))}
-            placeholder="Enter a number..."
-            className="w-full max-w-xs px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-lg"
-          />
-        ) : (
-          <input
-            type="text"
-            value={(data[currentQ.id] as string) || ''}
-            onChange={(e) => updateAnswer(currentQ.id, e.target.value)}
-            placeholder="Type your answer here..."
-            className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-lg"
-          />
-        )}
+        {renderQuestionInput(currentQ)}
 
-        {/* Navigation */}
         <div className="flex items-center justify-between mt-8">
           <button
             onClick={() => setCurrentQuestion(Math.max(0, currentQuestion - 1))}
@@ -275,7 +310,7 @@ export default function GuidedQuestionnaire({ module, data, onChange }: Props) {
           ) : (
             <div className="flex items-center gap-2 px-4 py-2 bg-emerald-100 text-emerald-700 rounded-xl">
               <CheckCircle className="w-5 h-5" />
-              All questions answered!
+              All questions complete!
             </div>
           )}
         </div>

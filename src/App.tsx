@@ -15,6 +15,7 @@ import ManuscriptPage from '@/pages/ManuscriptPage';
 import PricingPage from '@/pages/PricingPage';
 import AdminDashboardPage from '@/pages/AdminDashboardPage';
 import DocumentsPage from '@/pages/DocumentsPage';
+import ResearchPage from '@/pages/ResearchPage';
 import { Loader2 } from 'lucide-react';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -154,6 +155,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <DocumentsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/projects/:id/research"
+        element={
+          <ProtectedRoute>
+            <ResearchPage />
           </ProtectedRoute>
         }
       />
