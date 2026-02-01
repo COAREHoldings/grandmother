@@ -27,12 +27,15 @@ import {
   RefreshCw,
   BookOpen,
   BarChart3,
-  FileOutput
+  FileOutput,
+  ShieldCheck
 } from 'lucide-react';
+import RIEDashboard from '@/components/RIEDashboard';
 import toast from 'react-hot-toast';
 
 const modules = [
   { id: 'analysis', label: 'Analysis', icon: BarChart3, description: 'Document upload & scoring' },
+  { id: 'rie', label: 'Reference Integrity', icon: ShieldCheck, description: 'Claim verification & scoring' },
   { id: 'compile', label: 'Compile Grant', icon: FileOutput, description: 'Generate formatted grant document' },
   { id: 'history', label: 'History', icon: RefreshCw, description: 'Version history & comparisons' },
   { id: 'concept', label: '1. Concept', icon: Lightbulb, description: 'Research concept and significance', hasQuestionnaire: true },
@@ -450,6 +453,19 @@ function ModuleEditor({ module, data, onChange, project }: ModuleEditorProps) {
     case 'analysis':
       return (
         <AnalysisDashboard project={project} />
+      );
+
+    case 'rie':
+      return (
+        <RIEDashboard 
+          projectId={project?.id || ''} 
+          content={project ? {
+            concept: (project.concept as any)?.overview || '',
+            hypothesis: (project.hypothesis as any)?.statement || '',
+            specific_aims: (project.specific_aims as any)?.aims?.map((a: any) => a.description).join(' ') || '',
+            approach: (project.approach as any)?.methods || ''
+          } : undefined}
+        />
       );
 
     case 'compile':
