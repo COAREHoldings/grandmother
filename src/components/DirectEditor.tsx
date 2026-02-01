@@ -1,52 +1,52 @@
 import React, { useState } from 'react';
-import { FileText, MessageSquare, Wand2 } from 'lucide-react';
+import { FileText, MessageSquare, Sparkles } from 'lucide-react';
 
 interface DirectEditorProps {
   module: string;
   data: Record<string, unknown>;
   onChange: (data: Record<string, unknown>) => void;
-  children?: React.ReactNode; // For questionnaire
+  children?: React.ReactNode;
 }
 
 const MODULE_CONFIG: Record<string, { title: string; placeholder: string; field: string }> = {
   concept: {
     title: 'Research Concept',
-    placeholder: 'Describe your research concept, its significance, and the gap in knowledge it addresses...',
+    placeholder: 'Write your research concept here...\n\nDescribe:\n• The specific problem or gap in knowledge you are addressing\n• Why this problem matters and its impact if solved\n• Current approaches and their limitations\n• What makes your approach innovative\n• The long-term goal of your research program',
     field: 'content'
   },
   hypothesis: {
     title: 'Central Hypothesis',
-    placeholder: 'State your central hypothesis and the rationale behind it...',
+    placeholder: 'Write your central hypothesis here...\n\nInclude:\n• Your central, testable hypothesis\n• Evidence or rationale supporting this hypothesis\n• How you will test it\n• Alternative outcomes you might observe\n• Implications if your hypothesis is correct',
     field: 'content'
   },
   specific_aims: {
     title: 'Specific Aims',
-    placeholder: 'List and describe your specific aims. Include measurable objectives and expected outcomes...',
+    placeholder: 'Write your specific aims here...\n\nFor each aim, describe:\n• The objective (clear, measurable goal)\n• The approach (key experiments or methods)\n• Expected outcomes (what you will learn or produce)\n\nTypically 2-3 aims for an R01.',
     field: 'content'
   },
   team: {
     title: 'Key Personnel',
-    placeholder: 'Describe each key team member, their roles, qualifications, and contributions to the project...',
+    placeholder: 'Describe your team here...\n\nInclude:\n• Principal Investigator name, qualifications, and % effort\n• Co-Investigators and their roles\n• How the team\'s combined expertise addresses project needs\n• External collaborators or consultants',
     field: 'content'
   },
   approach: {
     title: 'Research Approach',
-    placeholder: 'Detail your research methodology, experimental design, data analysis plans, and timeline...',
+    placeholder: 'Write your research approach here...\n\nDetail:\n• Overall research strategy\n• Specific methods and techniques\n• Sample sizes and power calculations\n• Project timeline with milestones\n• Potential problems and alternative approaches\n• How you will ensure scientific rigor',
     field: 'content'
   },
   budget: {
     title: 'Budget Justification',
-    placeholder: 'Justify your budget requests for personnel, equipment, supplies, travel, and other costs...',
+    placeholder: 'Write your budget justification here...\n\nInclude:\n• Personnel needs and effort levels\n• Major equipment (items over $5,000)\n• Supplies and consumables\n• Travel requirements\n• Other costs (core facilities, publication fees)\n• Subcontracts or consortium arrangements',
     field: 'content'
   },
   preliminary_data: {
     title: 'Preliminary Data',
-    placeholder: 'Present your preliminary findings, pilot study results, or supporting data...',
+    placeholder: 'Present your preliminary data here...\n\nDescribe:\n• Key findings that support your hypothesis\n• Data sources (your lab, pilot studies, literature)\n• Figures you will include and what they demonstrate\n• How this data demonstrates feasibility\n• Relevant publications supporting your work',
     field: 'content'
   },
   summary_figure: {
     title: 'Summary Figure',
-    placeholder: 'Describe your summary figure concept or paste figure caption here...',
+    placeholder: 'Describe your summary figure here...\n\nInclude:\n• The main message reviewers should understand at a glance\n• Visual elements (diagrams, flowcharts, timelines, data plots)\n• How the figure tells your research story\n• Caption text for the figure',
     field: 'content'
   }
 };
@@ -63,52 +63,58 @@ export const DirectEditor: React.FC<DirectEditorProps> = ({ module, data, onChan
 
   return (
     <div className="space-y-4">
-      {/* Mode Toggle */}
-      <div className="flex items-center justify-between">
-        <div className="flex bg-gray-100 rounded-lg p-1">
+      {/* Mode Toggle - More prominent */}
+      <div className="flex items-center justify-between bg-slate-50 p-3 rounded-lg border border-slate-200">
+        <div className="flex gap-2">
           <button
             onClick={() => setMode('write')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
-              mode === 'write' ? 'bg-white shadow text-indigo-600' : 'text-gray-600 hover:text-gray-800'
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+              mode === 'write' 
+                ? 'bg-indigo-600 text-white shadow-md' 
+                : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-300'
             }`}
           >
             <FileText className="w-4 h-4" />
-            Write/Edit
+            Write / Edit
           </button>
           <button
             onClick={() => setMode('guided')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
-              mode === 'guided' ? 'bg-white shadow text-indigo-600' : 'text-gray-600 hover:text-gray-800'
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+              mode === 'guided' 
+                ? 'bg-indigo-600 text-white shadow-md' 
+                : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-300'
             }`}
           >
             <MessageSquare className="w-4 h-4" />
-            Guided
+            Guided Questions
           </button>
         </div>
-        <div className="text-sm text-gray-500">
+        <div className="text-sm font-medium text-slate-600 bg-white px-3 py-1.5 rounded border border-slate-200">
           {wordCount} words · ~{pageCount} pages
         </div>
       </div>
 
       {mode === 'write' ? (
-        <div className="space-y-3">
-          <div className="border border-gray-200 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500">
+        <div className="space-y-2">
+          {/* Large Writing Area */}
+          <div className="border-2 border-slate-300 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500 bg-white">
             <textarea
               value={content}
               onChange={(e) => onChange({ ...data, [config.field]: e.target.value })}
               placeholder={config.placeholder}
-              rows={20}
-              className="w-full px-4 py-3 text-gray-800 placeholder-gray-400 resize-none focus:outline-none"
-              style={{ minHeight: '400px' }}
+              className="w-full px-6 py-5 text-base text-slate-800 placeholder-slate-400 resize-none focus:outline-none leading-relaxed"
+              style={{ minHeight: '600px' }}
             />
           </div>
-          <div className="flex items-center justify-between text-xs text-gray-400">
-            <span>Write directly or paste your content here</span>
-            <span>Auto-saved on changes</span>
+          <div className="flex items-center justify-between text-sm text-slate-500 px-1">
+            <span>Write freely or paste your content. Switch to "Guided Questions" for structured prompts.</span>
+            <span>Changes auto-saved</span>
           </div>
         </div>
       ) : (
-        <div>{children}</div>
+        <div className="border border-slate-200 rounded-xl p-4 bg-slate-50">
+          {children}
+        </div>
       )}
     </div>
   );
