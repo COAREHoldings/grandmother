@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase, Project } from '@/lib/supabase';
+import { supabase, GfProject } from '@/lib/supabase';
 import Layout from '@/components/Layout';
 import { 
   Plus, 
@@ -18,7 +18,7 @@ import toast from 'react-hot-toast';
 export default function DashboardPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [projects, setProjects] = useState<GfProject[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -63,10 +63,10 @@ export default function DashboardPage() {
     }
   };
 
-  const getCompletionPercentage = (project: Project) => {
+  const getCompletionPercentage = (project: GfProject) => {
     const modules = ['concept', 'hypothesis', 'specific_aims', 'team', 'approach', 'budget', 'preliminary_data', 'summary_figure'];
     const completed = modules.filter(m => {
-      const data = project[m as keyof Project];
+      const data = project[m as keyof GfProject];
       return data && typeof data === 'object' && Object.keys(data as object).length > 0;
     }).length;
     return Math.round((completed / modules.length) * 100);

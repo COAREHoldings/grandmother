@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { supabase, Project } from '@/lib/supabase';
+import { supabase, GfProject } from '@/lib/supabase';
 import Layout from '@/components/Layout';
 import { 
   ChevronLeft, 
@@ -41,7 +41,7 @@ const sections = [
 
 export default function ManuscriptPage() {
   const { id } = useParams();
-  const [project, setProject] = useState<Project | null>(null);
+  const [project, setProject] = useState<GfProject | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeSection, setActiveSection] = useState('abstract');
   const [manuscript, setManuscript] = useState<ManuscriptData>({});

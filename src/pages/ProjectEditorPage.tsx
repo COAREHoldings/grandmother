@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { supabase, Project, NIH_SALARY_CAP } from '@/lib/supabase';
+import { supabase, GfProject, NIH_SALARY_CAP } from '@/lib/supabase';
 import Layout from '@/components/Layout';
 import ModuleDashboard from '@/components/ModuleDashboard';
 import CompletenessDashboard from '@/components/CompletenessDashboard';
@@ -48,7 +48,7 @@ const modules = [
 export default function ProjectEditorPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [project, setProject] = useState<Project | null>(null);
+  const [project, setProject] = useState<GfProject | null>(null);
   const [activeModule, setActiveModule] = useState('analysis');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -75,13 +75,13 @@ export default function ProjectEditorPage() {
     }
 
     setProject(data);
-    setModuleData(data[activeModule as keyof Project] as Record<string, unknown> || {});
+    setModuleData(data[activeModule as keyof GfProject] as Record<string, unknown> || {});
     setLoading(false);
   };
 
   useEffect(() => {
     if (project) {
-      setModuleData(project[activeModule as keyof Project] as Record<string, unknown> || {});
+      setModuleData(project[activeModule as keyof GfProject] as Record<string, unknown> || {});
     }
   }, [activeModule, project]);
 
@@ -211,8 +211,8 @@ export default function ProjectEditorPage() {
 
           <nav className="flex-1 overflow-y-auto p-2">
             {modules.map((module) => {
-              const hasContent = project?.[module.id as keyof Project] && 
-                Object.keys(project[module.id as keyof Project] as object || {}).length > 0;
+              const hasContent = project?.[module.id as keyof GfProject] && 
+                Object.keys(project[module.id as keyof GfProject] as object || {}).length > 0;
               return (
                 <button
                   key={module.id}
@@ -383,11 +383,11 @@ interface ModuleEditorProps {
   module: string;
   data: Record<string, unknown>;
   onChange: (data: Record<string, unknown>) => void;
-  project: Project | null;
+  project: GfProject | null;
 }
 
 // Analysis Dashboard - combines upload, completeness, and export validation
-function AnalysisDashboard({ project }: { project: Project | null }) {
+function AnalysisDashboard({ project }: { project: GfProject | null }) {
   const [exportValid, setExportValid] = useState(false);
   const [exportIssues, setExportIssues] = useState<string[]>([]);
 
@@ -514,7 +514,7 @@ function ModuleEditor({ module, data, onChange, project }: ModuleEditorProps) {
 interface BudgetDirectorProps {
   data: Record<string, unknown>;
   onChange: (data: Record<string, unknown>) => void;
-  project: Project | null;
+  project: GfProject | null;
 }
 
 interface PersonnelItem {

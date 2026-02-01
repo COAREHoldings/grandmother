@@ -2,11 +2,11 @@ import { useState } from 'react';
 import { FileText, Download, Copy, Loader2, CheckCircle, Sparkles } from 'lucide-react';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel } from 'docx';
 import { saveAs } from 'file-saver';
-import { Project } from '@/lib/supabase';
+import { GfProject } from '@/lib/supabase';
 import toast from 'react-hot-toast';
 
 interface Props {
-  project: Project | null;
+  project: GfProject | null;
 }
 
 export default function CompileGrant({ project }: Props) {
@@ -31,7 +31,7 @@ export default function CompileGrant({ project }: Props) {
     }
   };
 
-  const generateGrantText = (project: Project): string => {
+  const generateGrantText = (project: GfProject): string => {
     const sections: string[] = [];
     
     // Title
@@ -373,7 +373,7 @@ export default function CompileGrant({ project }: Props) {
   const getModuleCompleteness = () => {
     const modules = ['concept', 'hypothesis', 'specific_aims', 'team', 'approach', 'budget', 'preliminary_data', 'summary_figure'];
     const completed = modules.filter(m => {
-      const data = project?.[m as keyof Project];
+      const data = project?.[m as keyof GfProject];
       return data && typeof data === 'object' && Object.keys(data as object).length > 0;
     });
     return { completed: completed.length, total: modules.length };

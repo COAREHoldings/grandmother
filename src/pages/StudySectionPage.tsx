@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { supabase, Project } from '@/lib/supabase';
+import { supabase, GfProject } from '@/lib/supabase';
 import Layout from '@/components/Layout';
 import { 
   ChevronLeft, Loader2, Search, Target, BarChart3, 
@@ -65,7 +65,7 @@ const STUDY_SECTION_INFO: Record<string, string> = {
 export default function StudySectionPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [project, setProject] = useState<Project | null>(null);
+  const [project, setProject] = useState<GfProject | null>(null);
   const [loading, setLoading] = useState(true);
   const [analyzing, setAnalyzing] = useState(false);
   const [inputMode, setInputMode] = useState<'title' | 'aims' | 'full'>('title');

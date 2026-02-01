@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { supabase, Project } from '@/lib/supabase';
+import { supabase, GfProject } from '@/lib/supabase';
 import Layout from '@/components/Layout';
 import { 
   Search, BookOpen, DollarSign, ChevronLeft, Loader2, 
@@ -40,7 +40,7 @@ interface SavedReference {
 export default function ResearchPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [project, setProject] = useState<Project | null>(null);
+  const [project, setProject] = useState<GfProject | null>(null);
   const [activeTab, setActiveTab] = useState<'papers' | 'grants'>('papers');
   const [loading, setLoading] = useState(true);
   

@@ -59,3 +59,31 @@ export interface Project {
   created_at: string;
   updated_at: string;
 }
+
+// GF Projects interface for the new table
+export interface GfProject {
+  id: string;
+  user_id: string;
+  title?: string;
+  funding_program: string;
+  award_type: string;
+  phase_type?: string;
+  academic_partner_required?: boolean;
+  academic_allocation_percent?: number;
+  status: string;
+  data?: Record<string, unknown>;
+  target_agency?: string;
+  target_foa?: string;
+  project_type?: string;
+  concept: Record<string, unknown>;
+  hypothesis: Record<string, unknown>;
+  specific_aims: Record<string, unknown>;
+  team: Record<string, unknown>;
+  approach: Record<string, unknown>;
+  budget: Record<string, unknown>;
+  preliminary_data: Record<string, unknown>;
+  summary_figure: Record<string, unknown>;
+  review_simulation: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
