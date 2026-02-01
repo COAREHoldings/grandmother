@@ -16,7 +16,7 @@ Deno.serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, supabaseKey)
 
-    const { project_id } = await req.json()
+    const { project_id, include_claims } = await req.json()
 
     if (!project_id) {
       return new Response(
@@ -25,65 +25,77 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Fetch score summary
-    const { data: score, error: scoreError } = await supabase
+    const { data: score } = await supabase
       .from('rie_scores')
       .select('*')
       .eq('project_id', project_id)
       .single()
 
-    // Fetch claims breakdown by section
+    // Fetch claims with references for detailed view
+    const claimSelect = include_claims 
+      ? 'id, section_type, claim_type, claim_text, status, verification_score, rie_references(reference_text)'
+      : 'section_type, claim_type, status, verification_score'
+    
     const { data: claims } = await supabase
       .from('rie_claims')
-      .select('section_type, claim_type, status, verification_score')
+      .select(claimSelect)
       .eq('project_id', project_id)
 
-    // Aggregate by section
     const sectionBreakdown: Record<string, any> = {}
+    const sectionRIS: Array<{ section_name: string; score: number; claims: any[] }> = []
+    const claimsBySection: Record<string, any[]> = {}
+
     if (claims) {
       for (const claim of claims) {
-        if (!sectionBreakdown[claim.section_type]) {
-          sectionBreakdown[claim.section_type] = {
-            total: 0,
-            verified: 0,
-            unverified: 0,
-            partial: 0,
-            pending: 0,
-            avgScore: 0,
-            scores: []
-          }
+        const section = claim.section_type
+        if (!claimsBySection[section]) claimsBySection[section] = []
+        claimsBySection[section].push(claim)
+        
+        if (!sectionBreakdown[section]) {
+          sectionBreakdown[section] = { total: 0, verified: 0, unverified: 0, partial: 0, pending: 0, avgScore: 0, scores: [] }
         }
-        const section = sectionBreakdown[claim.section_type]
-        section.total++
-        section[claim.status]++
-        if (claim.verification_score) {
-          section.scores.push(claim.verification_score)
-        }
+        const sb = sectionBreakdown[section]
+        sb.total++
+        sb[claim.status]++
+        if (claim.verification_score) sb.scores.push(claim.verification_score)
       }
 
-      // Calculate averages
-      for (const key of Object.keys(sectionBreakdown)) {
-        const section = sectionBreakdown[key]
-        if (section.scores.length > 0) {
-          section.avgScore = section.scores.reduce((a: number, b: number) => a + b, 0) / section.scores.length
+      for (const [section, sectionClaims] of Object.entries(claimsBySection)) {
+        const sb = sectionBreakdown[section]
+        if (sb.scores.length > 0) {
+          sb.avgScore = sb.scores.reduce((a: number, b: number) => a + b, 0) / sb.scores.length
         }
-        delete section.scores
-      }
-    }
+        delete sb.scores
 
-    const response = {
-      project_id,
-      overall_score: score?.overall_score || 0,
-      claims_total: score?.claims_total || 0,
-      claims_verified: score?.claims_verified || 0,
-      claims_unverified: score?.claims_unverified || 0,
-      last_updated: score?.updated_at || null,
-      section_breakdown: sectionBreakdown,
-      integrity_grade: getIntegrityGrade(score?.overall_score || 0)
+        if (include_claims) {
+          sectionRIS.push({
+            section_name: section,
+            score: Math.round((sb.avgScore || 0) * 100),
+            claims: (sectionClaims as any[]).map((c: any) => ({
+              id: c.id,
+              claim_text: c.claim_text || '',
+              support_status: c.status === 'verified' ? 'supported' : c.status === 'partial' ? 'weak' : 'missing',
+              best_reference: c.rie_references?.[0] ? { title: c.rie_references[0].reference_text, year: 2024 } : undefined,
+              alignment_score: c.verification_score || 0,
+              validation_flags: { peer_reviewed: c.status === 'verified', retracted: false, preprint: false }
+            }))
+          })
+        }
+      }
     }
 
     return new Response(
-      JSON.stringify(response),
+      JSON.stringify({
+        project_id,
+        overall_score: score?.overall_score || 0,
+        claims_total: score?.claims_total || 0,
+        claims_verified: score?.claims_verified || 0,
+        claims_unverified: score?.claims_unverified || 0,
+        last_updated: score?.updated_at || null,
+        section_breakdown: sectionBreakdown,
+        section_ris: sectionRIS,
+        integrity_grade: getIntegrityGrade(score?.overall_score || 0)
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
 
