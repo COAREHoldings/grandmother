@@ -31,6 +31,7 @@ import {
   ShieldCheck
 } from 'lucide-react';
 import RIEDashboard from '@/components/RIEDashboard';
+import DirectEditor from '@/components/DirectEditor';
 import toast from 'react-hot-toast';
 
 const modules = [
@@ -282,7 +283,29 @@ export default function ProjectEditorPage() {
           <div className="max-w-4xl mx-auto px-8 py-8">
             {/* Project Title - Always Visible */}
             <div className="mb-8 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl p-6 border border-indigo-100">
-              <label className="block text-sm font-medium text-indigo-700 mb-2">Project Title</label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-indigo-700">Project Title</label>
+                <button
+                  onClick={() => {
+                    const tips = document.getElementById('title-tips');
+                    if (tips) tips.classList.toggle('hidden');
+                  }}
+                  className="text-xs text-indigo-500 hover:text-indigo-700 underline"
+                >
+                  What reviewers expect
+                </button>
+              </div>
+              <div id="title-tips" className="hidden mb-4 p-3 bg-white/70 rounded-lg text-sm text-slate-600 space-y-2">
+                <p className="font-semibold text-indigo-700">Reviewer Expectations for Titles:</p>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li><strong>Clarity:</strong> Clearly convey the research focus and scope</li>
+                  <li><strong>Specificity:</strong> Include key variables, population, or methodology</li>
+                  <li><strong>Innovation:</strong> Signal novelty without overselling</li>
+                  <li><strong>Brevity:</strong> Keep under 81 characters for NIH (15-20 words ideal)</li>
+                  <li><strong>Keywords:</strong> Use terms that match study section expertise</li>
+                  <li><strong>Avoid:</strong> Jargon, acronyms, overpromising language</li>
+                </ul>
+              </div>
               <div className="flex items-center gap-3">
                 <input
                   type="text"
@@ -305,8 +328,12 @@ export default function ProjectEditorPage() {
                   className="flex items-center gap-2 px-4 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-all text-sm font-medium disabled:opacity-50"
                 >
                   {loadingTitles ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                  Suggest Titles
+                  AI Write
                 </button>
+              </div>
+              <div className="mt-2 flex items-center justify-between text-xs text-slate-500">
+                <span>{(project?.title || '').length}/81 characters</span>
+                <span>{(project?.title || '').trim().split(/\s+/).filter(w => w).length} words</span>
               </div>
               {titleSuggestions.length > 0 && (
                 <div className="mt-4 space-y-2">
@@ -480,45 +507,61 @@ function ModuleEditor({ module, data, onChange, project }: ModuleEditorProps) {
 
     case 'concept':
       return (
-        <GuidedQuestionnaire module="concept" data={data} onChange={onChange} />
+        <DirectEditor module="concept" data={data} onChange={onChange}>
+          <GuidedQuestionnaire module="concept" data={data} onChange={onChange} />
+        </DirectEditor>
       );
 
     case 'hypothesis':
       return (
-        <GuidedQuestionnaire module="hypothesis" data={data} onChange={onChange} />
+        <DirectEditor module="hypothesis" data={data} onChange={onChange}>
+          <GuidedQuestionnaire module="hypothesis" data={data} onChange={onChange} />
+        </DirectEditor>
       );
 
     case 'specific_aims':
       return (
-        <GuidedQuestionnaire module="specific_aims" data={data} onChange={onChange} />
+        <DirectEditor module="specific_aims" data={data} onChange={onChange}>
+          <GuidedQuestionnaire module="specific_aims" data={data} onChange={onChange} />
+        </DirectEditor>
       );
 
     case 'team':
       return (
-        <GuidedQuestionnaire module="team" data={data} onChange={onChange} />
+        <DirectEditor module="team" data={data} onChange={onChange}>
+          <GuidedQuestionnaire module="team" data={data} onChange={onChange} />
+        </DirectEditor>
       );
 
     case 'approach':
       return (
-        <GuidedQuestionnaire module="approach" data={data} onChange={onChange} />
+        <DirectEditor module="approach" data={data} onChange={onChange}>
+          <GuidedQuestionnaire module="approach" data={data} onChange={onChange} />
+        </DirectEditor>
       );
 
     case 'budget':
       return (
-        <div className="space-y-6">
-          <GuidedQuestionnaire module="budget" data={data} onChange={onChange} />
-          <BudgetDirector data={data} onChange={onChange} project={project} />
-        </div>
+        <DirectEditor module="budget" data={data} onChange={onChange}>
+          <div className="space-y-6">
+            <GuidedQuestionnaire module="budget" data={data} onChange={onChange} />
+            <BudgetDirector data={data} onChange={onChange} project={project} />
+          </div>
+        </DirectEditor>
       );
 
     case 'preliminary_data':
       return (
-        <GuidedQuestionnaire module="preliminary_data" data={data} onChange={onChange} />
+        <DirectEditor module="preliminary_data" data={data} onChange={onChange}>
+          <GuidedQuestionnaire module="preliminary_data" data={data} onChange={onChange} />
+        </DirectEditor>
       );
 
     case 'summary_figure':
       return (
-        <GuidedQuestionnaire module="summary_figure" data={data} onChange={onChange} />
+        <DirectEditor module="summary_figure" data={data} onChange={onChange}>
+          <GuidedQuestionnaire module="summary_figure" data={data} onChange={onChange} />
+        </DirectEditor>
       );
 
     default:
