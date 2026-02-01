@@ -82,15 +82,57 @@ export default function ModuleDashboard({ projectId, onParseComplete, onScoreCom
 
     setScoring(true);
     try {
-      const { data, error } = await supabase.functions.invoke('gf-score-grant', {
-        body: { sections: parseResult.sections, moduleStatus: parseResult.moduleStatus }
+      // Use deterministic scoring engine
+      const { data, error } = await supabase.functions.invoke('gf-deterministic-score', {
+        body: { 
+          sections: parseResult.sections, 
+          moduleStatus: parseResult.moduleStatus,
+          projectId 
+        }
       });
 
       if (error) throw error;
       
-      setScoreResult(data);
-      onScoreComplete?.(data);
-      toast.success('Scoring complete');
+      // Transform to expected format
+      const transformedResult = {
+        nihScores: {
+          significance: data.nihScore,
+          innovation: data.nihScore,
+          approach: data.nihScore,
+          investigator: data.nihScore,
+          environment: data.nihScore,
+        },
+        impactScore: Math.round(data.nihScore * 10),
+        fundingProbability: data.probabilityBand.includes('45') ? 'High' : 
+                          data.probabilityBand.includes('20') ? 'Moderate' : 'Low',
+        moduleStrength: Object.fromEntries(
+          Object.entries(data.moduleScores).map(([k, v]: [string, any]) => [
+            k, 
+            { 
+              presence: v.presence, 
+              clarity: v.clarity, 
+              sufficiency: v.sufficiency, 
+              strength: v.score, 
+              deficient: v.score < 2.5 
+            }
+          ])
+        ),
+        deficientModules: Object.entries(data.moduleScores)
+          .filter(([_, v]: [string, any]) => v.score < 2.5)
+          .map(([k]) => parseInt(k)),
+        recommendations: [],
+        // New deterministic fields
+        weightedScore: data.weightedScore,
+        normalizedScore: data.normalizedScore,
+        nihScore: data.nihScore,
+        probabilityBand: data.probabilityBand,
+        structuralCapApplied: data.structuralCapApplied,
+        criticalModules: data.criticalModules,
+      };
+      
+      setScoreResult(transformedResult);
+      onScoreComplete?.(transformedResult);
+      toast.success(`Scoring complete - NIH Score: ${data.nihScore}`);
     } catch (err: any) {
       toast.error(err.message || 'Failed to score document');
     } finally {

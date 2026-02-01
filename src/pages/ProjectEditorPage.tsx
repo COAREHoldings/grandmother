@@ -5,6 +5,7 @@ import Layout from '@/components/Layout';
 import ModuleDashboard from '@/components/ModuleDashboard';
 import CompletenessDashboard from '@/components/CompletenessDashboard';
 import ExportValidation from '@/components/ExportValidation';
+import VersionHistory from '@/components/VersionHistory';
 import { 
   Lightbulb, 
   Target, 
@@ -28,6 +29,7 @@ import toast from 'react-hot-toast';
 
 const modules = [
   { id: 'analysis', label: 'Analysis', icon: BarChart3, description: 'Document upload & scoring' },
+  { id: 'history', label: 'History', icon: RefreshCw, description: 'Version history & comparisons' },
   { id: 'concept', label: 'Concept', icon: Lightbulb, description: 'Research concept and significance' },
   { id: 'hypothesis', label: 'Hypothesis', icon: Target, description: 'Central hypothesis development' },
   { id: 'specific_aims', label: 'Specific Aims', icon: FlaskConical, description: 'Aims and objectives' },
@@ -337,6 +339,11 @@ function ModuleEditor({ module, data, onChange, project }: ModuleEditorProps) {
     case 'analysis':
       return (
         <AnalysisDashboard project={project} />
+      );
+
+    case 'history':
+      return (
+        <VersionHistory projectId={project?.id || ''} />
       );
 
     case 'concept':
