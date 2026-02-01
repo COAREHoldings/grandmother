@@ -25,6 +25,13 @@ export const MECHANISMS = [
   { value: 'F32', label: 'F32 - Postdoctoral Fellowship' },
   { value: 'U01', label: 'U01 - Cooperative Agreement' },
   { value: 'P01', label: 'P01 - Program Project Grant' },
+  { value: 'SBIR_Phase_I', label: 'SBIR Phase I - Feasibility Study' },
+  { value: 'SBIR_Phase_II', label: 'SBIR Phase II - Full R&D' },
+  { value: 'SBIR_Phase_IIB', label: 'SBIR Phase IIB - Commercialization' },
+  { value: 'SBIR_Fast_Track', label: 'SBIR Fast Track - Combined I/II' },
+  { value: 'STTR_Phase_I', label: 'STTR Phase I - Feasibility Study' },
+  { value: 'STTR_Phase_II', label: 'STTR Phase II - Full R&D' },
+  { value: 'STTR_Fast_Track', label: 'STTR Fast Track - Combined I/II' },
 ];
 
 export const NIH_SALARY_CAP = 232200;

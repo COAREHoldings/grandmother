@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import LandingPage from '@/pages/LandingPage';
 import LoginPage from '@/pages/LoginPage';
 import RegisterPage from '@/pages/RegisterPage';
+import OnboardingPage from '@/pages/OnboardingPage';
 import DashboardPage from '@/pages/DashboardPage';
 import EntryPage from '@/pages/EntryPage';
 import ProjectEditorPage from '@/pages/ProjectEditorPage';
@@ -12,6 +13,7 @@ import OpportunitiesPage from '@/pages/OpportunitiesPage';
 import ResubmissionWizardPage from '@/pages/ResubmissionWizardPage';
 import ManuscriptPage from '@/pages/ManuscriptPage';
 import PricingPage from '@/pages/PricingPage';
+import AdminDashboardPage from '@/pages/AdminDashboardPage';
 import { Loader2 } from 'lucide-react';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -128,9 +130,21 @@ function AppRoutes() {
       />
       <Route
         path="/pricing"
+        element={<PricingPage />}
+      />
+      <Route
+        path="/onboarding"
         element={
           <ProtectedRoute>
-            <PricingPage />
+            <OnboardingPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin"
+        element={
+          <ProtectedRoute>
+            <AdminDashboardPage />
           </ProtectedRoute>
         }
       />
