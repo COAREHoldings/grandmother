@@ -35,27 +35,34 @@ import SAEDashboard from '@/components/SAEDashboard';
 import DirectEditor from '@/components/DirectEditor';
 import toast from 'react-hot-toast';
 
-const modules = [
-  { id: 'analysis', label: 'Analysis', icon: BarChart3, description: 'Document upload & scoring' },
-  { id: 'rie', label: 'Reference Integrity', icon: ShieldCheck, description: 'Claim verification & scoring' },
-  { id: 'sae', label: 'Statistical Analysis', icon: BarChart3, description: 'Per-aim statistical planning' },
-  { id: 'compile', label: 'Compile Grant', icon: FileOutput, description: 'Generate formatted grant document' },
-  { id: 'history', label: 'History', icon: RefreshCw, description: 'Version history & comparisons' },
-  { id: 'concept', label: '1. Concept', icon: Lightbulb, description: 'Research concept and significance', hasQuestionnaire: true },
+// Writing modules - primary content creation (shown first)
+const writingModules = [
+  { id: 'concept', label: '1. Research Concept', icon: Lightbulb, description: 'Research concept and significance', hasQuestionnaire: true },
   { id: 'hypothesis', label: '2. Hypothesis', icon: Target, description: 'Central hypothesis development', hasQuestionnaire: true },
   { id: 'specific_aims', label: '3. Specific Aims', icon: FlaskConical, description: 'Aims and objectives', hasQuestionnaire: true },
-  { id: 'team', label: '4. Team', icon: Users, description: 'Key personnel and expertise', hasQuestionnaire: true },
+  { id: 'team', label: '4. Key Personnel', icon: Users, description: 'Key personnel and expertise', hasQuestionnaire: true },
   { id: 'approach', label: '5. Approach', icon: Route, description: 'Research strategy and methods', hasQuestionnaire: true },
   { id: 'budget', label: '6. Budget', icon: DollarSign, description: 'Multi-year budget planning', hasQuestionnaire: true },
   { id: 'preliminary_data', label: '7. Preliminary Data', icon: Database, description: 'Supporting data', hasQuestionnaire: true },
   { id: 'summary_figure', label: '8. Summary Figure', icon: Image, description: 'Visual summary', hasQuestionnaire: true },
 ];
 
+// Tool modules - analysis and export
+const toolModules = [
+  { id: 'analysis', label: 'Analysis', icon: BarChart3, description: 'Document upload & scoring', hasQuestionnaire: false },
+  { id: 'rie', label: 'Reference Integrity', icon: ShieldCheck, description: 'Claim verification & scoring', hasQuestionnaire: false },
+  { id: 'sae', label: 'Statistical Analysis', icon: BarChart3, description: 'Per-aim statistical planning', hasQuestionnaire: false },
+  { id: 'compile', label: 'Compile Grant', icon: FileOutput, description: 'Generate formatted grant document', hasQuestionnaire: false },
+  { id: 'history', label: 'History', icon: RefreshCw, description: 'Version history & comparisons', hasQuestionnaire: false },
+];
+
+const modules = [...writingModules, ...toolModules];
+
 export default function ProjectEditorPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [project, setProject] = useState<GfProject | null>(null);
-  const [activeModule, setActiveModule] = useState('analysis');
+  const [activeModule, setActiveModule] = useState('concept');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -216,26 +223,53 @@ export default function ProjectEditorPage() {
           </div>
 
           <nav className="flex-1 overflow-y-auto p-2">
-            {modules.map((module) => {
+            {/* Writing Modules Section */}
+            <div className="px-3 py-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+              Grant Sections
+            </div>
+            {writingModules.map((module) => {
               const hasContent = project?.[module.id as keyof GfProject] && 
                 Object.keys(project[module.id as keyof GfProject] as object || {}).length > 0;
               return (
                 <button
                   key={module.id}
                   onClick={() => setActiveModule(module.id)}
-                  className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg text-left transition-all mb-1 ${
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all mb-1 ${
                     activeModule === module.id
-                      ? 'bg-indigo-50 text-indigo-600'
+                      ? 'bg-indigo-100 text-indigo-700 font-medium'
                       : 'text-slate-600 hover:bg-slate-50'
                   }`}
                 >
-                  <module.icon className="w-5 h-5 flex-shrink-0" />
+                  <module.icon className="w-4 h-4 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate">{module.label}</p>
+                    <p className="text-sm truncate">{module.label}</p>
                   </div>
                   {hasContent && (
                     <div className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0" />
                   )}
+                </button>
+              );
+            })}
+
+            {/* Tools Section */}
+            <div className="px-3 py-2 mt-4 text-xs font-semibold text-slate-500 uppercase tracking-wider border-t border-slate-200 pt-4">
+              Tools
+            </div>
+            {toolModules.map((module) => {
+              return (
+                <button
+                  key={module.id}
+                  onClick={() => setActiveModule(module.id)}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all mb-1 ${
+                    activeModule === module.id
+                      ? 'bg-indigo-100 text-indigo-700 font-medium'
+                      : 'text-slate-600 hover:bg-slate-50'
+                  }`}
+                >
+                  <module.icon className="w-4 h-4 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm truncate">{module.label}</p>
+                  </div>
                 </button>
               );
             })}
