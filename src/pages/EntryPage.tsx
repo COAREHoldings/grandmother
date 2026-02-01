@@ -38,10 +38,10 @@ const PHASE_TYPES = [
 ];
 
 const entryOptions = [
-  { id: 'scratch', icon: FileText, title: 'Start from Scratch', description: 'Begin a new grant application with AI-guided modules' },
-  { id: 'continue', icon: RefreshCw, title: 'Continue Draft', description: 'Resume work on an existing partial draft' },
-  { id: 'review', icon: Upload, title: 'Upload for Review', description: 'Upload a complete draft for AI review simulation' },
-  { id: 'convert', icon: BookOpen, title: 'Manuscript to Grant', description: 'Convert an existing manuscript into a grant proposal' }
+  { id: 'scratch', icon: FileText, title: 'Start from Scratch', description: 'Forward guided workflow through 8 core modules' },
+  { id: 'section_upload', icon: Upload, title: 'Upload Sections', description: 'Upload individual sections for targeted improvement' },
+  { id: 'full_upload', icon: BookOpen, title: 'Upload Complete Application', description: 'Upload full application for comprehensive scoring' },
+  { id: 'resubmission', icon: RefreshCw, title: 'Resubmission Analysis', description: 'Upload application + critique for resubmission strategy' }
 ];
 
 export default function EntryPage() {

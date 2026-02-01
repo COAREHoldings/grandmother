@@ -14,6 +14,7 @@ import ResubmissionWizardPage from '@/pages/ResubmissionWizardPage';
 import ManuscriptPage from '@/pages/ManuscriptPage';
 import PricingPage from '@/pages/PricingPage';
 import AdminDashboardPage from '@/pages/AdminDashboardPage';
+import DocumentsPage from '@/pages/DocumentsPage';
 import { Loader2 } from 'lucide-react';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -145,6 +146,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <AdminDashboardPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/documents"
+        element={
+          <ProtectedRoute>
+            <DocumentsPage />
           </ProtectedRoute>
         }
       />

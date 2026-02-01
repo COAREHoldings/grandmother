@@ -48,28 +48,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function signUp(email: string, password: string, name?: string) {
     // Standard signup
-    const { data, error } = await supabase.auth.signUp({
+    const { error: signUpError } = await supabase.auth.signUp({
       email,
       password,
       options: { data: { name } }
     });
 
-    if (error) {
-      return { error: error as Error };
+    if (signUpError) {
+      return { error: signUpError as Error };
     }
 
-    // If no session (email confirmation required), try signing in directly
-    if (!data.session) {
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-      if (signInError) {
-        return { error: signInError as Error };
-      }
-    }
+    // Immediately sign in after signup
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
 
-    return { error: null };
+    return { error: signInError as Error | null };
   }
 
   async function signOut() {

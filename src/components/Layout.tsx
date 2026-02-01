@@ -8,7 +8,8 @@ import {
   Search, 
   CreditCard,
   Menu,
-  X
+  X,
+  User
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -29,6 +30,7 @@ export default function Layout({ children }: LayoutProps) {
 
   const navItems = [
     { path: '/dashboard', label: 'Dashboard', icon: Home },
+    { path: '/documents', label: 'Documents', icon: User },
     { path: '/opportunities', label: 'Opportunities', icon: Search },
     { path: '/pricing', label: 'Pricing', icon: CreditCard },
   ];

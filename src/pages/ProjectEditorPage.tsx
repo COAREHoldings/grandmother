@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase, Project, NIH_SALARY_CAP } from '@/lib/supabase';
 import Layout from '@/components/Layout';
+import ModuleDashboard from '@/components/ModuleDashboard';
+import CompletenessDashboard from '@/components/CompletenessDashboard';
+import ExportValidation from '@/components/ExportValidation';
 import { 
   Lightbulb, 
   Target, 
@@ -18,11 +21,13 @@ import {
   ChevronLeft,
   AlertCircle,
   RefreshCw,
-  BookOpen
+  BookOpen,
+  BarChart3
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const modules = [
+  { id: 'analysis', label: 'Analysis', icon: BarChart3, description: 'Document upload & scoring' },
   { id: 'concept', label: 'Concept', icon: Lightbulb, description: 'Research concept and significance' },
   { id: 'hypothesis', label: 'Hypothesis', icon: Target, description: 'Central hypothesis development' },
   { id: 'specific_aims', label: 'Specific Aims', icon: FlaskConical, description: 'Aims and objectives' },
@@ -37,7 +42,7 @@ export default function ProjectEditorPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [project, setProject] = useState<Project | null>(null);
-  const [activeModule, setActiveModule] = useState('concept');
+  const [activeModule, setActiveModule] = useState('analysis');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -268,6 +273,35 @@ interface ModuleEditorProps {
   project: Project | null;
 }
 
+// Analysis Dashboard - combines upload, completeness, and export validation
+function AnalysisDashboard({ project }: { project: Project | null }) {
+  const [exportValid, setExportValid] = useState(false);
+  const [exportIssues, setExportIssues] = useState<string[]>([]);
+
+  return (
+    <div className="space-y-6">
+      <ModuleDashboard projectId={project?.id || ''} />
+      
+      <CompletenessDashboard
+        projectId={project?.id || ''}
+        projectData={project}
+        fundingProgram={(project as any)?.funding_program || project?.target_agency || 'nih_r01'}
+        onValidationComplete={(valid, issues) => {
+          setExportValid(valid);
+          setExportIssues(issues);
+        }}
+      />
+      
+      <ExportValidation
+        projectId={project?.id || ''}
+        projectData={project}
+        isValid={exportValid}
+        issues={exportIssues}
+      />
+    </div>
+  );
+}
+
 function ModuleEditor({ module, data, onChange, project }: ModuleEditorProps) {
   const updateField = (field: string, value: unknown) => {
     onChange({ ...data, [field]: value });
@@ -300,6 +334,11 @@ function ModuleEditor({ module, data, onChange, project }: ModuleEditorProps) {
   );
 
   switch (module) {
+    case 'analysis':
+      return (
+        <AnalysisDashboard project={project} />
+      );
+
     case 'concept':
       return (
         <div className="bg-white rounded-xl border border-slate-200 p-6">
